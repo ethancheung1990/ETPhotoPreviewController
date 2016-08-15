@@ -6,7 +6,6 @@
 build/
 DerivedData/
 .DS_Store
-contents.xcworkspacedata
 .svn
 
 ## Various settings
