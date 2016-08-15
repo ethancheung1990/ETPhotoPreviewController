@@ -85,7 +85,7 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
         self.lastIndex = self.initIndex;
         
         self.downloadManager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-
+        
     }
     return self;
 }
@@ -95,9 +95,6 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
 }
 
 - (BOOL)prefersStatusBarHidden {
-    if (self.previewType == PreviewTypeShow) {
-        return YES;
-    }
     return self.isFullScreen;
 }
 
@@ -111,7 +108,7 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
     
     self.previewType = PreviewTypeShow;
     self.view.backgroundColor = [UIColor clearColor];
-
+    
     UIViewController *rootController = [UIApplication sharedApplication].delegate.window.rootViewController;
     self.rootControlerModalPresentationStyle = rootController.modalPresentationStyle;
     if (IS_IOS8) {
@@ -130,7 +127,7 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
     
     self.previewType = PreviewTypePresent;
     self.view.backgroundColor = [UIColor blackColor];
-
+    
     UIViewController *rootController = [UIApplication sharedApplication].delegate.window.rootViewController;
     
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:self];
@@ -153,7 +150,7 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
     } else {
         [self _dismissFromPresentType];
     }
-
+    
 }
 
 - (void)deletePhotoAtIndex:(NSUInteger)index {
@@ -181,10 +178,10 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
         } else if (index == currentPage) {
             [self _didScrollToIndex:self.currentPage];
         }
-
+        
         self.scroller.contentSize = CGSizeMake(self.scroller.width*self.previews.count, self.scroller.height);
         [self _scrollToIndex:self.currentPage];
-
+        
     }
 }
 
@@ -210,7 +207,7 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
     self.scroller.contentSize = CGSizeMake(self.scroller.width*self.previews.count, self.scroller.height);
     [self.view addSubview:self.scroller];
     self.scroller.hidden = YES;
-
+    
     [self.view addSubview:self.pager];
     
     [self _scrollToIndex:self.initIndex];
@@ -236,6 +233,8 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
     void(^completeBlock)(BOOL) =  ^(BOOL finished){
         self.scroller.scrollEnabled = YES;
         self.pager.hidden = NO;
+        self.fullScreen = YES;
+        [self setNeedsStatusBarAppearanceUpdate];
     };
     
     ETPhotoPreviewView *view = self.previews[self.currentPage];
@@ -268,6 +267,10 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
 - (void)_dismissFromShowType {
     self.scroller.scrollEnabled = NO;
     self.pager.hidden = YES;
+    
+    self.fullScreen = NO;
+    [self setNeedsStatusBarAppearanceUpdate];
+    
     ETPhotoPreviewView *v = self.currentPage < self.previews.count ? self.previews[self.currentPage] : nil;
     [v setImageViewFullScreenMode];
     
@@ -430,11 +433,11 @@ typedef NS_ENUM(NSUInteger, PreviewType) {
 }
 
 /*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
+ // Only override drawRect: if you perform custom drawing.
+ // An empty implementation adversely affects performance during animation.
+ - (void)drawRect:(CGRect)rect {
+ // Drawing code
+ }
+ */
 
 @end
