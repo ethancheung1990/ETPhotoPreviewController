@@ -23,6 +23,8 @@
 
 - (UIImage *)thumbnailForMaxWidth:(CGFloat)maxWith maxHeight:(CGFloat)maxHeight;
 
+- (UIImage *)rotateImageUsingOrientation:(UIImageOrientation)orientation;
+
 - (UIImage *)orientationFixedImage;
 
 + (void)alblumPhotoImageWithComplete:(void(^)(UIImage* image))completeBlock;
