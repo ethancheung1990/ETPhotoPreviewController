@@ -114,7 +114,7 @@ static char __logDeallocAssociatedKey__;
 						NSUInteger ivarSize = 0;
 						NSUInteger ivarAlignment = 0;
 						NSGetSizeAndAlignment(type, &ivarSize, &ivarAlignment);
-						NSData *data = [NSData dataWithBytes:(const char *)objc_unretainedPointer(self) + ivar_getOffset(ivar)
+						NSData *data = [NSData dataWithBytes:(const char *)(__bridge void *)(self) + ivar_getOffset(ivar)
                                                       length:ivarSize];
 						[encoder encodeObject:data forKey:key];
 					}
@@ -152,7 +152,7 @@ static char __logDeallocAssociatedKey__;
 							NSUInteger ivarAlignment = 0;
 							NSGetSizeAndAlignment(type, &ivarSize, &ivarAlignment);
 							NSData *data = [decoder decodeObjectForKey:key];
-							char *sourceIvarLocation = (char*)objc_unretainedPointer(self)+ ivar_getOffset(ivar);
+							char *sourceIvarLocation = (char*)(__bridge void *)(self)+ ivar_getOffset(ivar);
 							[data getBytes:sourceIvarLocation length:ivarSize];
 						}
 							break;
