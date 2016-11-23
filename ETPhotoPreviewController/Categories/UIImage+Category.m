@@ -8,6 +8,7 @@
 
 #import "UIImage+Category.h"
 #import <AssetsLibrary/AssetsLibrary.h>
+#import <Photos/Photos.h>
 
 @implementation UIImage (Category)
 
@@ -328,97 +329,33 @@
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc] init];
-        NSMutableArray *groups=[[NSMutableArray alloc]init];
-        ALAssetsLibraryGroupsEnumerationResultsBlock listGroupBlock = ^(ALAssetsGroup *group, BOOL *stop)
-        {
-            if (group)
-            {
-                [groups addObject:group];
-            }
-            
-            else
-            {
-                BOOL haveHDRGroup = NO;
-                
-                for (ALAssetsGroup *gp in groups)
-                {
-                    NSString *name =[gp valueForProperty:ALAssetsGroupPropertyName];
-                    
-                    if ([name isEqualToString:customAlbumName])
-                    {
-                        haveHDRGroup = YES;
-                    }
-                }
-                
-                if (!haveHDRGroup)
-                {
-                    [assetsLibrary addAssetsGroupAlbumWithName:customAlbumName
-                                                   resultBlock:^(ALAssetsGroup *group)
-                     {
-                         [groups addObjectIfNotNil:group];
-                         
-                     }
-                                                  failureBlock:nil];
-                    haveHDRGroup = YES;
-                }
-            }
-            
-        };
-        //创建相簿
-        [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupAlbum usingBlock:listGroupBlock failureBlock:nil];
         
-        [self _saveToAlbumWithMetadata:nil imageData:UIImagePNGRepresentation(self) customAlbumName:customAlbumName completionBlock:completionBlock failureBlock:failureBlock];
-    });
-    
-}
-
-- (void)_saveToAlbumWithMetadata:(NSDictionary *)metadata
-                      imageData:(NSData *)imageData
-                customAlbumName:(NSString *)customAlbumName
-                completionBlock:(void (^)(void))completionBlock
-                   failureBlock:(void (^)(NSError *error))failureBlock
-{
-    
-    ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc] init];
-    void (^AddAsset)(ALAssetsLibrary *, NSURL *) = ^(ALAssetsLibrary *assetsLibrary, NSURL *assetURL) {
-        [assetsLibrary assetForURL:assetURL resultBlock:^(ALAsset *asset) {
-            [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
-                
-                if ([[group valueForProperty:ALAssetsGroupPropertyName] isEqualToString:customAlbumName]) {
-                    [group addAsset:asset];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (completionBlock) {
-                            completionBlock();
-                        }
-                    });
-                }
-            } failureBlock:^(NSError *error) {
+        [assetsLibrary writeImageDataToSavedPhotosAlbum:UIImagePNGRepresentation(self) metadata:metadata completionBlock:^(NSURL *assetURL, NSError *error) {
+            if (error) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (failureBlock) {
                         failureBlock(error);
                     }
                 });
-            }];
-        } failureBlock:^(NSError *error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (failureBlock) {
-                    failureBlock(error);
-                }
-            });
-        }];
-    };
-    __weak typeof(assetsLibrary) weakassetsLibrary = assetsLibrary;
-    [assetsLibrary writeImageDataToSavedPhotosAlbum:imageData metadata:metadata completionBlock:^(NSURL *assetURL, NSError *error) {
-        if (customAlbumName) {
-            [assetsLibrary addAssetsGroupAlbumWithName:customAlbumName resultBlock:^(ALAssetsGroup *group) {
-                if (group) {
-                    [weakassetsLibrary assetForURL:assetURL resultBlock:^(ALAsset *asset) {
-                        [group addAsset:asset];
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            if (completionBlock) {
-                                completionBlock();
-                            }
-                        });
+            } else {
+                if (customAlbumName) {
+                    
+                    [assetsLibrary assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+                        
+                        [self.class _createAlbumIfNeedWithCustomAlbumName:customAlbumName ALAssetsLibrary:assetsLibrary completionBlock:^(ALAssetsGroup *group) {
+                            [group addAsset:asset];
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                if (completionBlock) {
+                                    completionBlock();
+                                }
+                            });
+                        } failureBlock:^(NSError *error) {
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                if (failureBlock) {
+                                    failureBlock(error);
+                                }
+                            });
+                        }];
                     } failureBlock:^(NSError *error) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if (failureBlock) {
@@ -427,17 +364,100 @@
                         });
                     }];
                 } else {
-                    AddAsset(weakassetsLibrary, assetURL);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (completionBlock) {
+                            completionBlock();
+                        }
+                    });
                 }
-            } failureBlock:^(NSError *error) {
-                AddAsset(weakassetsLibrary, assetURL);
-            }];
+            }
+        }];
+        
+    });
+    
+}
+
++ (void)_createAlbumIfNeedWithCustomAlbumName:(NSString *)customAlbumName
+                              ALAssetsLibrary:(ALAssetsLibrary*)assetsLibrary
+                              completionBlock:(void (^)(ALAssetsGroup *group))completionBlock
+                                 failureBlock:(void (^)(NSError *error))failureBlock{
+    if (!assetsLibrary) {
+        assetsLibrary = [ALAssetsLibrary new];
+    }
+    
+    __weak typeof(self) weakSelf = self;
+    [self _groupWithAlbumName:customAlbumName ALAssetsLibrary:assetsLibrary completionBlock:^(ALAssetsGroup *group) {
+        if (group) {
+            if (completionBlock) {
+                completionBlock(group);
+            }
         } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
+            if (IS_IOS8) {
+                [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+                    [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:customAlbumName];
+                } completionHandler:^(BOOL success, NSError *error) {
+                    if (error) {
+                        if (failureBlock) {
+                            failureBlock(error);
+                        }
+                    } else {
+                        [weakSelf _groupWithAlbumName:customAlbumName ALAssetsLibrary:assetsLibrary completionBlock:^(ALAssetsGroup *group) {
+                            if (completionBlock) {
+                                completionBlock(group);
+                            }
+                        } failureBlock:^(NSError *error) {
+                            if (failureBlock) {
+                                failureBlock(error);
+                            }
+                        }];
+                    }
+                }];
+            } else {
+                [assetsLibrary addAssetsGroupAlbumWithName:customAlbumName
+                                               resultBlock:^(ALAssetsGroup *group) {
+                                                   if (completionBlock) {
+                                                       completionBlock(group);
+                                                   }
+                                               } failureBlock:^(NSError *error) {
+                                                   if (failureBlock) {
+                                                       failureBlock(error);
+                                                   }
+                                               }];
+            }
+            
+        }
+    } failureBlock:^(NSError *error) {
+        if (failureBlock) {
+            failureBlock(error);
+        }
+    }];
+    
+}
+
++ (void)_groupWithAlbumName:(NSString*)customAlbumName ALAssetsLibrary:(ALAssetsLibrary*)assetsLibrary completionBlock:(void (^)(ALAssetsGroup *group))completionBlock failureBlock:(void (^)(NSError *error))failureBlock{
+    
+    __block BOOL hasSame = NO;
+    ALAssetsLibraryGroupsEnumerationResultsBlock block = ^(ALAssetsGroup *group, BOOL *stop) {
+        if (group)
+        {
+            NSString *name =[group valueForProperty:ALAssetsGroupPropertyName];
+            if ([name isEqualToString:customAlbumName]) {
                 if (completionBlock) {
-                    completionBlock();
+                    completionBlock(group);
                 }
-            });
+                hasSame = YES;
+                *stop = YES;
+            }
+        } else if (!hasSame) {
+            if (completionBlock) {
+                completionBlock(nil);
+            }
+        }
+    };
+    
+    [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupAlbum usingBlock:block failureBlock:^(NSError *error) {
+        if (failureBlock) {
+            failureBlock(error);
         }
     }];
 }
