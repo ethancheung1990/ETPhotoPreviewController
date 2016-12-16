@@ -50,6 +50,7 @@
 		E24137231D617A1E00550D81 /* UINavigationController+Category.m in Sources */ = {isa = PBXBuildFile; fileRef = E24137051D617A1E00550D81 /* UINavigationController+Category.m */; };
 		E24137241D617A1E00550D81 /* UITableView+Category.m in Sources */ = {isa = PBXBuildFile; fileRef = E24137071D617A1E00550D81 /* UITableView+Category.m */; };
 		E24137251D617A1E00550D81 /* UIView+Category.m in Sources */ = {isa = PBXBuildFile; fileRef = E24137091D617A1E00550D81 /* UIView+Category.m */; };
+		E2E0CDE21E03CC1B00CF4C29 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E0CDE11E03CC1B00CF4C29 /* Photos.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -137,6 +138,7 @@
 		E24137081D617A1E00550D81 /* UIView+Category.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Category.h"; sourceTree = "<group>"; };
 		E24137091D617A1E00550D81 /* UIView+Category.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Category.m"; sourceTree = "<group>"; };
 		E24137261D617A9200550D81 /* ETPhotoPreviewController-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ETPhotoPreviewController-Prefix.pch"; sourceTree = "<group>"; };
+		E2E0CDE11E03CC1B00CF4C29 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +146,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2E0CDE21E03CC1B00CF4C29 /* Photos.framework in Frameworks */,
 				3C80CB7987F4B4A28208DB73 /* libPods-ETPhotoPreviewController.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -154,6 +157,7 @@
 		0CC3553E26B912E4C942D970 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E2E0CDE11E03CC1B00CF4C29 /* Photos.framework */,
 				5E47ECA21D7887B43719E2B8 /* libPods-ETPhotoPreviewController.a */,
 			);
 			name = Frameworks;
